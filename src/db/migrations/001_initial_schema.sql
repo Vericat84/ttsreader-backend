@@ -11,12 +11,18 @@ CREATE TABLE IF NOT EXISTS reactions (
     emoji VARCHAR(10) NOT NULL,
     predefined_message_id INTEGER,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    UNIQUE(user_id, book_unique_id, target_type, 
-           COALESCE(chapter_index, -1), 
-           COALESCE(page_number, -1), 
-           COALESCE(timestamp_position, -1), 
-           COALESCE(quote_id, -1))
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Índice único para evitar reacciones duplicadas
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reactions_unique ON reactions(
+    user_id, 
+    book_unique_id, 
+    target_type, 
+    COALESCE(chapter_index, -1), 
+    COALESCE(page_number, -1), 
+    COALESCE(timestamp_position, -1), 
+    COALESCE(quote_id, -1)
 );
 
 -- Tabla de citas
