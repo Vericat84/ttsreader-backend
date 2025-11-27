@@ -1,6 +1,26 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
+
+// Ejecutar migraciones al iniciar
+async function runMigrations() {
+  try {
+    const pool = require('./db/connection');
+    const migrationFile = path.join(__dirname, 'db', 'migrations', '001_initial_schema.sql');
+    const sql = fs.readFileSync(migrationFile, 'utf8');
+    await pool.query(sql);
+    console.log('✅ Migraciones ejecutadas exitosamente');
+  } catch (error) {
+    // Si las tablas ya existen, ignorar el error
+    if (error.message && error.message.includes('already exists')) {
+      console.log('ℹ️  Las tablas ya existen, continuando...');
+    } else {
+      console.error('⚠️  Error en migraciones (continuando):', error.message);
+    }
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,7 +56,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+// Iniciar servidor
+async function startServer() {
+  // Ejecutar migraciones primero
+  await runMigrations();
+  
+  // Iniciar servidor
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+}
+
+startServer();
 
